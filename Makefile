@@ -24,6 +24,10 @@ run-only:
 	@echo "Running Docker Compose"
 	@IMAGE_TAG=$(IMAGE_TAG) docker-compose up -d
 
+stop:
+	@echo "Stopping Docker Compose"
+	@IMAGE_TAG=$(IMAGE_TAG) docker-compose down
+
 # Clean up Docker images
 clean:
 	@docker rmi $(IMAGE_NAME):$(TAG) || true
