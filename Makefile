@@ -13,7 +13,7 @@ all: run
 # Build the Docker image
 build:
 	@echo "Building Docker image with tag $(IMAGE_TAG)"
-	@docker rmi $(IMAGE_TAG) || true
+	@docker rmi $(IMAGE_NAME):$(TAG) || true
 	@docker build -t $(IMAGE_NAME):$(TAG) .
 
 # Run the Docker Compose (with building)
@@ -29,5 +29,7 @@ stop:
 	@IMAGE_TAG=$(IMAGE_TAG) docker-compose down
 
 # Clean up Docker images
-clean:
+clean: stop
 	@docker rmi $(IMAGE_NAME):$(TAG) || true
+
+restart: clean run

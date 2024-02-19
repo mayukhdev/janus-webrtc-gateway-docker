@@ -7,7 +7,9 @@ services:
     command: sh -c "nginx && /usr/local/bin/janus -F /usr/local/etc/janus"
     network_mode: "host"
     volumes:
-    #   - "./conf/janus.transport.http.jcfg:/usr/local/etc/janus/janus.transport.http.jcfg"
+      - "./conf/janus.transport.http.jcfg:/usr/local/etc/janus/janus.transport.http.jcfg"
       - "./conf/janus.jcfg:/usr/local/etc/janus/janus.jcfg"
-    #   - "./conf/janus.eventhandler.sampleevh.jcfg:/usr/local/etc/janus/janus.eventhandler.sampleevh.jcfg"
+      - "./conf/janus.transport.websockets.jcfg:/usr/local/etc/janus/janus.transport.websockets.jcfg"
+      - "./conf/janus.plugin.audiobridge.jcfg:/usr/local/etc/janus/janus.plugin.audiobridge.jcfg"
+      - "./conf/html/settings.js:/usr/local/share/janus/demos/settings.js"
     restart: always
