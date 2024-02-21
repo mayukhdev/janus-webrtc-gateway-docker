@@ -1,8 +1,8 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN rm -rf /var/lib/apt/lists/*
-RUN apt-get -y update && apt-get install -y \
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+    locales \
     libjansson-dev \
     libnice-dev \
     libssl-dev \
@@ -32,9 +32,17 @@ RUN apt-get -y update && apt-get install -y \
     libc6-dev \
     make \
     pkg-config \
-    lsof wget vim sudo rsync cron mysql-client openssh-server supervisor locate mplayer valgrind certbot curl dnsutils tcpdump gstreamer1.0-tools
+    lsof wget vim sudo rsync cron mysql-client openssh-server supervisor locate mplayer valgrind certbot curl dnsutils tcpdump gstreamer1.0-tools \
+    nginx \
+    ffmpeg \
+    libavutil56 libavcodec58 libavformat58 libavutil-dev libavcodec-dev libavformat-dev \
+    python3-pip ninja-build \
+    autoconf texinfo automake \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
     
-
+ENV LANG en_US.utf8
 
 # libwebsockets
 RUN cd /tmp/ &&  LIBWEBSOCKET="4.3.2" && wget https://github.com/warmcat/libwebsockets/archive/v$LIBWEBSOCKET.tar.gz && \
@@ -54,8 +62,17 @@ RUN cd /tmp/ && SRTP="2.2.0" && wget https://github.com/cisco/libsrtp/archive/v$
 
 
 
+# # libnice 0.1.21    commit 3d9cae16a5094aadb1651572644cb5786a8b4e2d
+# RUN cd / && apt-get remove -y libnice-dev libnice10 && apt-get update -y && apt-get install -y python3-pip ninja-build  && pip3 install meson && \
+#     git clone https://gitlab.freedesktop.org/libnice/libnice.git && \
+#     cd libnice && \
+#     git checkout 3d9cae16a5094aadb1651572644cb5786a8b4e2d && \
+#     meson --prefix=/usr build && \
+#     ninja -C build && \
+#     sudo ninja -C build install
+
 # libnice 0.1.21    commit 3d9cae16a5094aadb1651572644cb5786a8b4e2d
-RUN cd / && apt-get remove -y libnice-dev libnice10 && apt-get update -y && apt-get install -y python3-pip ninja-build  && pip3 install meson && \
+RUN cd / && apt-get remove -y libnice-dev libnice10 && pip3 install meson && \
     git clone https://gitlab.freedesktop.org/libnice/libnice.git && \
     cd libnice && \
     git checkout 3d9cae16a5094aadb1651572644cb5786a8b4e2d && \
@@ -71,9 +88,14 @@ cd usrsctp && \
 ./configure --prefix=/usr --disable-programs --disable-inet --disable-inet6 && \
 make && sudo make install
 
+# # libmicrohttpd v0.9.72
+# RUN apt-get update && apt-get install -y autoconf texinfo automake && \
+# 	cd /tmp && git clone https://git.gnunet.org/libmicrohttpd.git && \
+# 	cd libmicrohttpd && git checkout v0.9.72 && autoreconf -fi && \
+# 	./configure --prefix=/usr --enable-messages --enable-https && make && make install
+
 # libmicrohttpd v0.9.72
-RUN apt-get update && apt-get install -y autoconf texinfo automake && \
-	cd /tmp && git clone https://git.gnunet.org/libmicrohttpd.git && \
+RUN cd /tmp && git clone https://git.gnunet.org/libmicrohttpd.git && \
 	cd libmicrohttpd && git checkout v0.9.72 && autoreconf -fi && \
 	./configure --prefix=/usr --enable-messages --enable-https && make && make install
 
@@ -96,8 +118,8 @@ RUN cd /tmp/ && curl -R -O https://duktape.org/duktape-2.7.0.tar.xz \
     
 
   
-## janus if build use --enable-post-processing
-RUN apt-get update -y && apt-get install libavutil56 libavcodec58 libavformat58 libavutil-dev libavcodec-dev libavformat-dev -y
+# ## janus if build use --enable-post-processing
+# RUN apt-get update -y && apt-get install libavutil56 libavcodec58 libavformat58 libavutil-dev libavcodec-dev libavformat-dev -y
 
 
 # janus
@@ -114,14 +136,17 @@ RUN cd / &&  git clone https://github.com/meetecho/janus-gateway.git && cd /janu
 
 
 #FFmpeg install
-RUN apt update -y && sudo apt install  -y ffmpeg && ffmpeg -version
+RUN ffmpeg -version
 
 # nginx
-RUN apt-get update -y && apt-get install -y nginx
+# RUN apt-get update -y && apt-get install -y nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
-RUN apt-get clean && \
-	rm -rf /var/lib/apt/lists/*
+COPY ./conf/*.jcfg /usr/local/etc/janus/
+COPY ./conf/html/settings.js /usr/local/share/janus/demos/settings.js
+
+# RUN apt-get clean && \
+# 	rm -rf /var/lib/apt/lists/*
 
 SHELL ["/bin/bash", "-l", "-euxo", "pipefail", "-c"]
 
