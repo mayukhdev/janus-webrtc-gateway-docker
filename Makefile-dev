@@ -4,7 +4,7 @@
 BIT_VERSION := $(shell uname -m)
 VERSION := $(BIT_VERSION)-1.2.1
 TAG := latest
-IMAGE_NAME := janus-webrtc-gateway-docker-$(VERSION)
+IMAGE_NAME := janus-webrtc-gateway-docker-dev-$(VERSION)
 IMAGE_TAG := $(VERSION):$(TAG)
 
 # Default target
@@ -22,20 +22,14 @@ run: build run-only
 # Run the Docker Compose without building
 run-only:
 	@echo "Running Docker Compose"
-	@IMAGE_TAG=$(IMAGE_TAG) docker-compose up -d
+	@IMAGE_TAG=$(IMAGE_TAG) docker-compose -f docker-compose-dev.yml up -d
 
 stop:
 	@echo "Stopping Docker Compose"
-	@IMAGE_TAG=$(IMAGE_TAG) docker-compose down
+	@IMAGE_TAG=$(IMAGE_TAG) docker-compose -f docker-compose-dev.yml down
 
 # Clean up Docker images
 clean: stop
 	@docker rmi $(IMAGE_NAME):$(TAG) || true
 
 restart: clean run
-
-
-
-
-# make -f Makefile-dev restart
-# make -f Makefile-dev run

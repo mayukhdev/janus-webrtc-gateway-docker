@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  janus-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    # image: 'janus-webrtc-gateway-docker-dev-${IMAGE_TAG}'
+    image: 'janus-webrtc-gateway-docker-dev-1.2.1'
+    command: /usr/local/bin/janus -F /usr/local/etc/janus
+    # Remove network_mode and use custom bridge network for clearer networking
+    volumes:
+      - janus-demos:/usr/local/share/janus/demos
+    ports:
+      - "8088:8088" # Janus Admin/HTTP API port (if needed)
+      - "8188:8188" # Janus WebSocket API port (if needed)
+      - "10000-10100:10000-10100/udp" # RTP port range for Janus
+    restart: always
+    networks:
+      - janus_network
+
+  nginx:
+    image: nginx:latest # Use an official NGINX image
+    volumes:
+      - ./nginx-dev.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/html/settings.js:/usr/local/share/janus/demos/settings.js:ro # Map settings.js
+      - janus-demos:/usr/local/share/janus/demos:ro
+    ports:
+      - "8086:8086" # Expose NGINX HTTP server
+      - "8187:8187" # Expose NGINX WebSocket server
+    depends_on:
+      - janus-gateway
+    restart: always
+    networks:
+      - janus_network
+
+# Define a custom network
+networks:
+  janus_network:
+    driver: bridge
+
+volumes:
+  janus-demos:
+
+# docker-compose -f docker-compose-dev.yml up -d

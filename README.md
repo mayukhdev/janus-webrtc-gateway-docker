@@ -69,5 +69,13 @@ services:
 
 ```
 
+```yaml
+  # Run using
+  docker-compose -f docker-compose-dev.yml up -d
+
+  # Stop
+  docker-compose -f docker-compose-dev.yml down
+```
+
 >**Warning**
 > Before startup, please ensure your config files is ok,  pay attention to comments in YAML
