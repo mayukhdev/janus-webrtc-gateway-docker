@@ -1,4 +1,10 @@
 FROM alpine:3.15
+
+ARG LIBWEBSOCKET_VERSION="4.3.2"
+ARG LIBSRTP_VERSION="2.2.0"
+ARG JANUS_VERSION="v1.2.1"
+ARG LIBNICE_TAG="3d9cae16a5094aadb1651572644cb5786a8b4e2d"
+
 # Install build dependencies
 RUN apk update && apk add --no-cache \
     build-base \
@@ -36,39 +42,42 @@ RUN apk update && apk add --no-cache \
     && rm -rf /var/cache/apk/*
 # Build libwebsockets
 WORKDIR /tmp
-ARG LIBWEBSOCKET_VERSION="4.3.2"
+# ARG LIBWEBSOCKET_VERSION="4.3.2"
 RUN wget https://github.com/warmcat/libwebsockets/archive/v${LIBWEBSOCKET_VERSION}.tar.gz && \
     tar xzf v${LIBWEBSOCKET_VERSION}.tar.gz && \
     cd libwebsockets-${LIBWEBSOCKET_VERSION} && \
     mkdir build && \
     cd build && \
     cmake cmake -DLWS_MAX_SMP=1 -DLWS_IPV6="ON" -DLWS_WITHOUT_EXTENSIONS=0 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
-    make && make install
+    make && make install &&\
+    cd /tmp && rm -rf libwebsockets-${LIBWEBSOCKET_VERSION}*
 # Build libsrtp
-WORKDIR /tmp
-ARG LIBSRTP_VERSION="2.2.0"
+# WORKDIR /tmp
+# ARG LIBSRTP_VERSION="2.2.0"
 RUN wget https://github.com/cisco/libsrtp/archive/v${LIBSRTP_VERSION}.tar.gz && \
     tar xzf v${LIBSRTP_VERSION}.tar.gz && \
     cd libsrtp-${LIBSRTP_VERSION} && \
     ./configure --prefix=/usr --enable-openssl && \
-    make shared_library && make install
+    make shared_library && make install &&\
+    cd /tmp && rm -rf libsrtp-${LIBSRTP_VERSION}*
 # Build libnice
-WORKDIR /tmp
+# WORKDIR /tmp
 RUN git clone https://gitlab.freedesktop.org/libnice/libnice.git && \
     cd libnice && \
-    git checkout 3d9cae16a5094aadb1651572644cb5786a8b4e2d && \
+    git checkout ${LIBNICE_TAG} && \
     python3 -m venv venv && \
     source venv/bin/activate && \
     pip install meson && \
     meson --prefix=/usr build && \
     ninja -C build && \
     ninja -C build install && \
-    deactivate
+    deactivate && \
+    cd /tmp && rm -rf libnice*
 # Build Janus Gateway
 WORKDIR /
 RUN git clone https://github.com/meetecho/janus-gateway.git /janus-gateway && \
     cd /janus-gateway && \
-    git checkout refs/tags/v1.2.1 && \
+    git checkout refs/tags/${JANUS_VERSION} && \
     sh autogen.sh && \
     ./configure --prefix=/usr/local --enable-post-processing --disable-rabbitmq --disable-mqtt --disable-unix-sockets --enable-all-handlers && \
     make && \
