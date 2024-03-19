@@ -1,0 +1,77 @@
+FROM alpine:3.15
+# Install build dependencies
+RUN apk update && apk add --no-cache \
+    build-base \
+    ca-certificates \
+    cmake \
+    git \
+    libconfig-dev \
+    libcurl \
+    libmicrohttpd-dev \
+    libnice-dev \
+    libogg-dev \
+    jansson-dev \
+    lua5.3-dev \
+    ninja \
+    opus-dev \
+    pkgconf \
+    python3 \
+    python3-dev \
+    sox \
+    speexdsp-dev \
+    wget \
+    autoconf \
+    automake \
+    libtool \
+    gettext-dev \
+    gtk-doc \
+    intltool \
+    glib-dev \
+    jansson-dev \
+    openssl-dev \
+    ffmpeg-dev \
+    libogg-dev \
+    zlib-dev
+# Build libwebsockets
+WORKDIR /tmp
+ARG LIBWEBSOCKET_VERSION="4.3.2"
+RUN wget https://github.com/warmcat/libwebsockets/archive/v${LIBWEBSOCKET_VERSION}.tar.gz && \
+    tar xzf v${LIBWEBSOCKET_VERSION}.tar.gz && \
+    cd libwebsockets-${LIBWEBSOCKET_VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" -DLWS_MAX_SMP=1 -DLWS_IPV6="ON" .. && \
+    make && make install
+# Build libsrtp
+WORKDIR /tmp
+ARG LIBSRTP_VERSION="2.2.0"
+RUN wget https://github.com/cisco/libsrtp/archive/v${LIBSRTP_VERSION}.tar.gz && \
+    tar xzf v${LIBSRTP_VERSION}.tar.gz && \
+    cd libsrtp-${LIBSRTP_VERSION} && \
+    ./configure --prefix=/usr --enable-openssl && \
+    make shared_library && make install
+# Build libnice
+WORKDIR /tmp
+RUN git clone https://gitlab.freedesktop.org/libnice/libnice.git && \
+    cd libnice && \
+    git checkout 3d9cae16a5094aadb1651572644cb5786a8b4e2d && \
+    python3 -m venv venv && \
+    source venv/bin/activate && \
+    pip install meson && \
+    meson --prefix=/usr build && \
+    ninja -C build && \
+    ninja -C build install && \
+    deactivate
+# Build Janus Gateway
+WORKDIR /
+RUN git clone https://github.com/meetecho/janus-gateway.git /janus-gateway && \
+    cd /janus-gateway && \
+    git checkout refs/tags/v1.2.1 && \
+    sh autogen.sh && \
+    ./configure --prefix=/usr/local --enable-post-processing --disable-rabbitmq --disable-mqtt --disable-unix-sockets --enable-all-handlers && \
+    make && \
+    make install && \
+    make configs
+COPY ./conf/*.jcfg /usr/local/etc/janus/
+COPY ./conf/html/settings.js /usr/local/share/janus/demos/settings.js
+CMD ["/usr/local/bin/janus"]

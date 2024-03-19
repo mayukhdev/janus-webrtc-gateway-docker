@@ -3,7 +3,7 @@ services:
   janus-gateway:
     build:
       context: .
-      dockerfile: Dockerfile-dev
+      dockerfile: Dockerfile-dev-alpine
     # image: 'janus-webrtc-gateway-docker-dev-${IMAGE_TAG}'
     image: 'janus-webrtc-gateway-docker-dev-1.2.1'
     command: /usr/local/bin/janus -F /usr/local/etc/janus
