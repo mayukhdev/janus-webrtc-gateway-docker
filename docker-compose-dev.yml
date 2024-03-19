@@ -19,7 +19,7 @@ services:
       - janus_network
 
   nginx:
-    image: nginx:latest # Use an official NGINX image
+    image: nginx:1.25.4-alpine # Use an official NGINX image
     volumes:
       - ./nginx-dev.conf:/etc/nginx/nginx.conf:ro
       - ./conf/html/settings.js:/usr/local/share/janus/demos/settings.js:ro # Map settings.js
