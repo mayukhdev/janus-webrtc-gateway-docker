@@ -31,7 +31,9 @@ RUN apk update && apk add --no-cache \
     openssl-dev \
     ffmpeg-dev \
     libogg-dev \
-    zlib-dev
+    zlib-dev \
+    sofia-sip-dev \
+    && rm -rf /var/cache/apk/*
 # Build libwebsockets
 WORKDIR /tmp
 ARG LIBWEBSOCKET_VERSION="4.3.2"
@@ -40,7 +42,7 @@ RUN wget https://github.com/warmcat/libwebsockets/archive/v${LIBWEBSOCKET_VERSIO
     cd libwebsockets-${LIBWEBSOCKET_VERSION} && \
     mkdir build && \
     cd build && \
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" -DLWS_MAX_SMP=1 -DLWS_IPV6="ON" .. && \
+    cmake cmake -DLWS_MAX_SMP=1 -DLWS_IPV6="ON" -DLWS_WITHOUT_EXTENSIONS=0 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
     make && make install
 # Build libsrtp
 WORKDIR /tmp
